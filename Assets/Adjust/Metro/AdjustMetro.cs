@@ -40,11 +40,11 @@ namespace com.adjust.sdk {
 
         public void start(AdjustConfig adjustConfig) {
             string logLevelString = null;
-            string environment = adjustConfig.environment.lowercaseToString();
+            string environment = lowercaseToString(adjustConfig.environment);
             Action<Dictionary<string, string>> attributionChangedDictionary = null;
 
             if (adjustConfig.logLevel != null) {
-                logLevelString = adjustConfig.lowercaseToString();
+                logLevelString = lowercaseToString(adjustConfig.logLevel.Value);
             }
 
             if (adjustConfig.attributionChangedDelegate != null) {
@@ -63,6 +63,41 @@ namespace com.adjust.sdk {
             );
         }
 
+        public static string lowercaseToString(AdjustLogLevel AdjustLogLevel)
+        {
+            switch (AdjustLogLevel)
+            {
+                case AdjustLogLevel.Verbose:
+                    return "verbose";
+                case AdjustLogLevel.Debug:
+                    return "debug";
+                case AdjustLogLevel.Info:
+                    return "info";
+                case AdjustLogLevel.Warn:
+                    return "warn";
+                case AdjustLogLevel.Error:
+                    return "error";
+                case AdjustLogLevel.Assert:
+                    return "assert";
+                case AdjustLogLevel.Suppress:
+                    return "suppress";
+                default:
+                    return "unknown";
+            }
+        }
+
+        public static string lowercaseToString(AdjustEnvironment adjustEnvironment)
+        {
+            switch (adjustEnvironment)
+            {
+                case AdjustEnvironment.Sandbox:
+                    return "sandbox";
+                case AdjustEnvironment.Production:
+                    return "production";
+                default:
+                    return "unknown";
+            }
+        }
         public void trackEvent(AdjustEvent adjustEvent) {
             AdjustWS.TrackEvent(
                 eventToken:adjustEvent.eventToken,
