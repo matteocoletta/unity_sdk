@@ -4,14 +4,21 @@ using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
-using AdjustUnityWS;
-
+#if UNITY_WSA_10_0
+using AdjustUnityWS10;
+#elif UNITY_WINRT_8_1
+using AdjustUnityWS81;
+#endif
 namespace com.adjust.sdk {
     public class AdjustMetro : IAdjust {
         private const string sdkPrefix = "unity4.11.0";
 
         public bool isEnabled() {
-            return AdjustWS.IsEnabled();
+#if UNITY_WSA_10_0
+            return AdjustWS10.IsEnabled();
+#elif UNITY_WINRT_8_1
+            return AdjustWS81.IsEnabled();
+#endif
         }
 
         public string getAdid() {
@@ -23,19 +30,35 @@ namespace com.adjust.sdk {
         }
 
         public void onPause() {
-            AdjustWS.ApplicationDeactivated();
+#if UNITY_WSA_10_0
+            AdjustWS10.ApplicationDeactivated();
+#elif UNITY_WINRT_8_1
+            AdjustWS81.ApplicationDeactivated();
+#endif
         }
 
         public void onResume() {
-            AdjustWS.ApplicationActivated();
+#if UNITY_WSA_10_0
+            AdjustWS10.ApplicationActivated();
+#elif UNITY_WINRT_8_1
+            AdjustWS81.ApplicationActivated();
+#endif
         }
 
         public void setEnabled(bool enabled) {
-            AdjustWS.SetEnabled(enabled);
+#if UNITY_WSA_10_0
+            AdjustWS10.SetEnabled(enabled);
+#elif UNITY_WINRT_8_1
+            AdjustWS81.SetEnabled(enabled);
+#endif
         }
 
         public void setOfflineMode(bool offlineMode) {
-            AdjustWS.SetOfflineMode(offlineMode);
+#if UNITY_WSA_10_0
+            AdjustWS10.SetOfflineMode(offlineMode);
+#elif UNITY_WINRT_8_1
+            AdjustWS81.SetOfflineMode(offlineMode);
+#endif
         }
 
         public void start(AdjustConfig adjustConfig) {
@@ -43,15 +66,18 @@ namespace com.adjust.sdk {
             string environment = lowercaseToString(adjustConfig.environment);
             Action<Dictionary<string, string>> attributionChangedDictionary = null;
 
-            if (adjustConfig.logLevel != null) {
+            if (adjustConfig.logLevel.HasValue) {
                 logLevelString = lowercaseToString(adjustConfig.logLevel.Value);
             }
 
             if (adjustConfig.attributionChangedDelegate != null) {
                 attributionChangedDictionary = (attributionDictionary) => Adjust.runAttributionChangedDictionary(attributionDictionary);
             }
-
-            AdjustWS.ApplicationLaunching(
+#if UNITY_WSA_10_0
+            AdjustWS10.ApplicationLaunching(
+#elif UNITY_WINRT_8_1
+            AdjustWS81.ApplicationLaunching(
+#endif
                 appToken:adjustConfig.appToken,
                 logLevelString:logLevelString,
                 environment:environment,
@@ -98,8 +124,13 @@ namespace com.adjust.sdk {
                     return "unknown";
             }
         }
+
         public void trackEvent(AdjustEvent adjustEvent) {
-            AdjustWS.TrackEvent(
+#if UNITY_WSA_10_0
+            AdjustWS10.TrackEvent(
+#elif UNITY_WINRT_8_1
+            AdjustWS81.TrackEvent(
+#endif
                 eventToken:adjustEvent.eventToken,
                 revenue:adjustEvent.revenue,
                 currency:adjustEvent.currency,
