@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{069404C1-D9D2-4DD4-9A3F-F586F4F2315E}</ProjectGuid>
+    <ProjectGuid>{EF992A60-EF7E-49C8-9E56-796287705C6E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AdjustUnityWS</RootNamespace>
-    <AssemblyName>AdjustUnityWS</AssemblyName>
+    <RootNamespace>AdjustUnityWS81</RootNamespace>
+    <AssemblyName>AdjustUnityWS81</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -39,7 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdjustWS.cs" />
+    <Compile Include="AdjustWS81.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AdjustUnityWS
+namespace AdjustUnityWS10
 {
-    public class AdjustWS
+    public class AdjustWS10
     {
         public static void ApplicationLaunching(string appToken, string environment, string logLevelString, string defaultTracker, bool? eventBufferingEnabled, string sdkPrefix, Action<Dictionary<string, string>> attributionChangedDic, Action<String> logDelegate) { }
 
