@@ -12,92 +12,135 @@ using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
 #endif
 
-public class AdjustEditor {
+[CustomEditor(typeof(com.adjust.sdk.Adjust))]
+public class AdjustEditor: Editor {
     private static bool isPostProcessingEnabled = true;
+    private const string adjustActivityName = "com.adjust.sdk.AdjustUnityActivity";
 
-    [MenuItem ("Assets/Adjust/Check post processing status")]
-    public static void CheckPostProcessingPermission() {
-        EditorUtility.DisplayDialog ("adjust", "The post processing for adjust is " + (isPostProcessingEnabled ? "enabled." : "disabled."), "OK");
-    }
+    public override void OnInspectorGUI() {
+        GUI.changed = false;
 
-    [MenuItem ("Assets/Adjust/Change post processing status")]
-    public static void ChangePostProcessingPermission() {
-        isPostProcessingEnabled = !isPostProcessingEnabled;
-        EditorUtility.DisplayDialog ("adjust", "The post processing for adjust is now " + (isPostProcessingEnabled ? "enabled." : "disabled."), "OK");
-    }
+        SerializedObject serializedAdjustData = new UnityEditor.SerializedObject(AdjustData.Instance);
 
-    [PostProcessBuild]
-    public static void OnPostprocessBuild(BuildTarget target, string projectPath) {
-        // Check what is user setting about allowing adjust SDK to perform post build tasks.
-        // If user disabled it, oh well, we won't do a thing.
-        if (!isPostProcessingEnabled) {
-            UnityEngine.Debug.Log("adjust: You have forbidden the adjust SDK to perform post processing tasks.");
-            UnityEngine.Debug.Log("adjust: Skipping post processing tasks.");
+        SerializedProperty serializedAppToken = serializedAdjustData.FindProperty("appToken");
+        SerializedProperty serializedEventBuffering = serializedAdjustData.FindProperty("eventBuffering");
+        SerializedProperty serializedStartManually = serializedAdjustData.FindProperty("startManually");
+        SerializedProperty serializedPrintAttribution = serializedAdjustData.FindProperty("printAttribution");
+        SerializedProperty serializedSendInBackground = serializedAdjustData.FindProperty("sendInBackground");
+        SerializedProperty serializedLaunchDeferredDeeplink = serializedAdjustData.FindProperty("launchDeferredDeeplink");
+        SerializedProperty serializedLogLevel = serializedAdjustData.FindProperty("logLevel");
+        SerializedProperty serializedEnvironment = serializedAdjustData.FindProperty("environment");
+        SerializedProperty serializedAppScheme = serializedAdjustData.FindProperty("appScheme");
 
-            return;
+        EditorGUILayout.PropertyField(serializedAppToken, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedEventBuffering, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedStartManually, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedPrintAttribution, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedSendInBackground, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedLaunchDeferredDeeplink, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedLogLevel, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedEnvironment, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedAppScheme, new GUILayoutOption[]{});
+
+        GUI.enabled = true;
+
+        if (GUILayout.Button("Update Android Manifest", new GUILayoutOption[]{})) {
+            RunPostBuildScript(target:BuildTarget.Android, preBuild:false, projectPath:Application.dataPath);
+            GUI.changed = false;
+            AssetDatabase.Refresh();
         }
 
-        RunPostBuildScript(target:target, preBuild:false, projectPath:projectPath);
+        if (GUI.changed) {
+            serializedAdjustData.ApplyModifiedProperties();
+            EditorUtility.SetDirty(AdjustData.Instance);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
     }
 
+    [MenuItem ("Assets/Adjust/Check post processing status")]
+        public static void CheckPostProcessingPermission() {
+            EditorUtility.DisplayDialog ("adjust", "The post processing for adjust is " + (isPostProcessingEnabled ? "enabled." : "disabled."), "OK");
+        }
+
+    [MenuItem ("Assets/Adjust/Change post processing status")]
+        public static void ChangePostProcessingPermission() {
+            isPostProcessingEnabled = !isPostProcessingEnabled;
+            EditorUtility.DisplayDialog ("adjust", "The post processing for adjust is now " + (isPostProcessingEnabled ? "enabled." : "disabled."), "OK");
+        }
+
+    [PostProcessBuild]
+        public static void OnPostprocessBuild(BuildTarget target, string projectPath) {
+            // Check what is user setting about allowing adjust SDK to perform post build tasks.
+            // If user disabled it, oh well, we won't do a thing.
+            if (!isPostProcessingEnabled) {
+                UnityEngine.Debug.Log("adjust: You have forbidden the adjust SDK to perform post processing tasks.");
+                UnityEngine.Debug.Log("adjust: Skipping post processing tasks.");
+
+                return;
+            }
+
+            RunPostBuildScript(target:target, preBuild:false, projectPath:projectPath);
+        }
+
+    //TODO: projectPath is by default empty but its important. Test it with iOS and see what it returns
     private static void RunPostBuildScript(BuildTarget target, bool preBuild, string projectPath = "") {
         if (target == BuildTarget.Android) {
             UnityEngine.Debug.Log("adjust: Starting to perform post build tasks for Android platform.");
-            RunPostProcessTasksAndroid();
+            RunPostProcessTasksAndroid(projectPath);
         } else if (target == BuildTarget.iOS) {
-            #if UNITY_IOS
             UnityEngine.Debug.Log("adjust: Starting to perform post build tasks for iOS platform.");
-            
-            string xcodeProjectPath = projectPath + "/Unity-iPhone.xcodeproj/project.pbxproj";
-
-            PBXProject xcodeProject = new PBXProject();
-            xcodeProject.ReadFromFile(xcodeProjectPath);
-
-            // The adjust SDK needs two frameworks to be added to the project:
-            // - AdSupport.framework
-            // - iAd.framework
-
-            string xcodeTarget = xcodeProject.TargetGuidByName("Unity-iPhone");
-            
-            UnityEngine.Debug.Log("adjust: Adding AdSupport.framework to Xcode project.");
-            xcodeProject.AddFrameworkToProject(xcodeTarget, "AdSupport.framework", true);
-            UnityEngine.Debug.Log("adjust: AdSupport.framework added successfully.");
-
-            UnityEngine.Debug.Log("adjust: Adding iAd.framework to Xcode project.");
-            xcodeProject.AddFrameworkToProject(xcodeTarget, "iAd.framework", true);
-            UnityEngine.Debug.Log("adjust: iAd.framework added successfully.");
-
-            // The adjust SDK needs to have Obj-C exceptions enabled.
-            // GCC_ENABLE_OBJC_EXCEPTIONS=YES
-
-            UnityEngine.Debug.Log("adjust: Enabling Obj-C exceptions by setting GCC_ENABLE_OBJC_EXCEPTIONS value to YES.");
-            xcodeProject.AddBuildProperty(xcodeTarget, "GCC_ENABLE_OBJC_EXCEPTIONS", "YES");
-
-            UnityEngine.Debug.Log("adjust: Obj-C exceptions enabled successfully.");
-
-            // The adjust SDK needs to have -ObjC flag set in other linker flags section because of it's categories.
-            // OTHER_LDFLAGS -ObjC
-            
-            UnityEngine.Debug.Log("adjust: Adding -ObjC flag to other linker flags (OTHER_LDFLAGS).");
-            xcodeProject.AddBuildProperty(xcodeTarget, "OTHER_LDFLAGS", "-ObjC");
-
-            UnityEngine.Debug.Log("adjust: -ObjC successfully added to other linker flags.");
-
-            // Save the changes to Xcode project file.
-            xcodeProject.WriteToFile(xcodeProjectPath);
-            #endif
+            RunPostProcessTasksiOS(projectPath);
         }
     }
 
     private static void RunPostProcessTasksiOS(string projectPath) {
-        
+#if UNITY_IOS
+        string xcodeProjectPath = projectPath + "/Unity-iPhone.xcodeproj/project.pbxproj";
+
+        PBXProject xcodeProject = new PBXProject();
+        xcodeProject.ReadFromFile(xcodeProjectPath);
+
+        // The adjust SDK needs two frameworks to be added to the project:
+        // - AdSupport.framework
+        // - iAd.framework
+
+        string xcodeTarget = xcodeProject.TargetGuidByName("Unity-iPhone");
+
+        UnityEngine.Debug.Log("adjust: Adding AdSupport.framework to Xcode project.");
+        xcodeProject.AddFrameworkToProject(xcodeTarget, "AdSupport.framework", true);
+        UnityEngine.Debug.Log("adjust: AdSupport.framework added successfully.");
+
+        UnityEngine.Debug.Log("adjust: Adding iAd.framework to Xcode project.");
+        xcodeProject.AddFrameworkToProject(xcodeTarget, "iAd.framework", true);
+        UnityEngine.Debug.Log("adjust: iAd.framework added successfully.");
+
+        // The adjust SDK needs to have Obj-C exceptions enabled.
+        // GCC_ENABLE_OBJC_EXCEPTIONS=YES
+
+        UnityEngine.Debug.Log("adjust: Enabling Obj-C exceptions by setting GCC_ENABLE_OBJC_EXCEPTIONS value to YES.");
+        xcodeProject.AddBuildProperty(xcodeTarget, "GCC_ENABLE_OBJC_EXCEPTIONS", "YES");
+
+        UnityEngine.Debug.Log("adjust: Obj-C exceptions enabled successfully.");
+
+        // The adjust SDK needs to have -ObjC flag set in other linker flags section because of it's categories.
+        // OTHER_LDFLAGS -ObjC
+
+        UnityEngine.Debug.Log("adjust: Adding -ObjC flag to other linker flags (OTHER_LDFLAGS).");
+        xcodeProject.AddBuildProperty(xcodeTarget, "OTHER_LDFLAGS", "-ObjC");
+
+        UnityEngine.Debug.Log("adjust: -ObjC successfully added to other linker flags.");
+
+        // Save the changes to Xcode project file.
+        xcodeProject.WriteToFile(xcodeProjectPath);
+#endif
     }
 
-    private static void RunPostProcessTasksAndroid() {
+    private static void RunPostProcessTasksAndroid(string projectPath) {
         bool isAdjustManifestUsed = false;
-        string androidPluginsPath = Path.Combine(Application.dataPath, "Plugins/Android");
-        string adjustManifestPath = Path.Combine(Application.dataPath, "Adjust/Android/AdjustAndroidManifest.xml");
-        string appManifestPath = Path.Combine(Application.dataPath, "Plugins/Android/AndroidManifest.xml");
+        string androidPluginsPath = Path.Combine(projectPath, "Plugins/Android");
+        string adjustManifestPath = Path.Combine(projectPath, "Adjust/Android/AdjustAndroidManifest.xml");
+        string appManifestPath = Path.Combine(projectPath, "Plugins/Android/AndroidManifest.xml");
 
         // Check if user has already created AndroidManifest.xml file in its location.
         // If not, use already predefined AdjustAndroidManifest.xml as default one.
@@ -105,7 +148,7 @@ public class AdjustEditor {
             if (!Directory.Exists(androidPluginsPath)) {
                 Directory.CreateDirectory(androidPluginsPath);
             }
-            
+
             isAdjustManifestUsed = true;
             File.Copy(adjustManifestPath, appManifestPath);
 
@@ -125,12 +168,15 @@ public class AdjustEditor {
             // Let's open the app's AndroidManifest.xml file.
             XmlDocument manifestFile = new XmlDocument();
             manifestFile.Load(appManifestPath);
-            
+
             // Add needed permissions if they are missing.
             AddPermissions(manifestFile);
 
             // Add intent filter to main activity if it is missing.
             AddBroadcastReceiver(manifestFile);
+
+            // Add deeplink properties to main activity if it is missing.
+            AddDeeplinkProperties(manifestFile);
 
             // Save the changes.
             manifestFile.Save(appManifestPath);
@@ -140,7 +186,7 @@ public class AdjustEditor {
 
             UnityEngine.Debug.Log("adjust: App's AndroidManifest.xml file check and potential modification completed.");
             UnityEngine.Debug.Log("adjust: Please check if any error message was displayed during this process " 
-                + "and make sure to fix all issues in order to properly use the adjust SDK in your app.");
+                    + "and make sure to fix all issues in order to properly use the adjust SDK in your app.");
         }
     }
 
@@ -189,6 +235,129 @@ public class AdjustEditor {
             UnityEngine.Debug.Log("adjust: android.permission.ACCESS_WIFI_STATE permission successfully added to your app's AndroidManifest.xml file.");
         } else {
             UnityEngine.Debug.Log("adjust: Your app's AndroidManifest.xml file already contains android.permission.ACCESS_WIFI_STATE permission.");
+        }
+    }
+
+    private static void AddDeeplinkProperties(XmlDocument manifest) {
+        UnityEngine.Debug.Log("adjust: Adding deeplink properties to manifest.");
+
+        XmlElement manifestRoot = manifest.DocumentElement;
+        XmlNode applicationNode = null;
+
+        // Let's find the application node.
+        foreach(XmlNode node in manifestRoot.ChildNodes) {
+            if (node.Name == "application") {
+                applicationNode = node;
+                break;
+            }
+        }
+
+        // If there's no application node, something is really wrong with your AndroidManifest.xml.
+        if (applicationNode == null) {
+            UnityEngine.Debug.LogError("adjust: Your app's AndroidManifest.xml file does not contain \"<application>\" node.");
+            UnityEngine.Debug.LogError("adjust: Unable to add the adjust broadcast receiver to AndroidManifest.xml.");
+
+            return;
+        }
+
+        // Let's find the activity node.
+        XmlNode activityNode = null;
+        foreach(XmlNode node in applicationNode.ChildNodes) {
+            if (node.Name == "activity") {
+                activityNode = node;
+                break;
+            }
+        }
+
+        // If there's no activity node, something is really wrong with your AndroidManifest.xml.
+        if (activityNode == null) {
+            UnityEngine.Debug.LogError("adjust: Your app's AndroidManifest.xml file does not contain \"<activity>\" node.");
+            UnityEngine.Debug.LogError("adjust: Unable to add the deeplink settings to AndroidManifest.xml.");
+
+            return;
+        }
+
+        bool findLaunchMode = false;
+        foreach(XmlAttribute attribute in activityNode.Attributes) {
+            if (attribute.Name == "android:name") {
+                if(!attribute.Value.Contains("AdjustUnityActivity")
+                        && !attribute.Value.Contains("UnityPlayerActivity")) {
+                    UnityEngine.Debug.Log("adjust: It seems like you are using your own activity class.");
+                    UnityEngine.Debug.Log("adjust: Please, modify the scheme like described in here: https://github.com/adjust/android_sdk#standard-deep-linking-scenario");
+                    return;
+                } else {
+                    UnityEngine.Debug.Log("adjust: Changing activity to com.adjust.sdk.AdjustUnityActivity");
+                    attribute.Value = adjustActivityName;
+                    findLaunchMode = true;
+                }
+            }
+
+            //Check if the activity node has a launchMode attribute and modify it
+            if (findLaunchMode && attribute.Name == "android:launchMode") {
+                UnityEngine.Debug.Log("adjust: Changing launchmode to singleTask");
+                attribute.Value = "singleTask";
+            }
+        }
+
+        //If we couldn't find a launchMode attribute, then we add one here.
+        //Null checks to check if we already added it
+        if(activityNode.Attributes != null
+                && activityNode.Attributes["android:launchMode"] == null) {
+            //Create a new 'singleTask' attribute and add it to activityNode
+            XmlAttribute attr = manifest.CreateAttribute("android__launchMode");
+            attr.Value = "singleTask";
+            activityNode.Attributes.Append(attr);
+        }
+
+        // Okay, there's an activity node in the AndroidManifest.xml file.
+        // Let's now check if user has already defined an intent filter 
+        // If that is already defined, don't force the intent filter to the manifest file.
+        // If not, add the intent filter and deeplink settings to the manifest file.
+        bool didFindIntentFilter = false;
+        foreach (XmlNode node in activityNode.ChildNodes) {
+            if (node.Name == "intent-filter") {
+                foreach (XmlNode subNode in node.ChildNodes) {
+                    if (subNode.Name == "data") {
+                        foreach(XmlAttribute attribute in subNode.Attributes) {
+                            if (attribute.Name.Contains("scheme")) {
+                                didFindIntentFilter = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(didFindIntentFilter) break;
+                }
+            }
+            if(didFindIntentFilter) break;
+        }
+
+        // Let's see what we have found so far.
+        if (didFindIntentFilter) {
+            UnityEngine.Debug.Log("adjust: It seems like you are using your deeplink scheme.");
+            UnityEngine.Debug.Log("adjust: Please, modify the scheme like described in here: https://github.com/adjust/android_sdk#standard-deep-linking-scenario");
+        } else {
+            // Generate adjust broadcast receiver entry and add it to the application node.
+
+            XmlElement intentFilterElement = manifest.CreateElement("intent-filter");
+            XmlElement actionElement = manifest.CreateElement("action");
+            actionElement.SetAttribute("android__name", "android.intent.action.VIEW");
+
+            XmlElement categoryElement1 = manifest.CreateElement("category");
+            categoryElement1.SetAttribute("android__name", "android.intent.category.DEFAULT");
+
+            XmlElement categoryElement2 = manifest.CreateElement("category");
+            categoryElement2.SetAttribute("android__name", "android.intent.category.BROWSABLE");
+
+            XmlElement dataElement = manifest.CreateElement("data");
+            dataElement.SetAttribute("android__scheme", AdjustData.Instance.appScheme);
+
+            intentFilterElement.AppendChild(actionElement);
+            intentFilterElement.AppendChild(categoryElement1);
+            intentFilterElement.AppendChild(categoryElement2);
+            intentFilterElement.AppendChild(dataElement);
+            activityNode.AppendChild(intentFilterElement);
+
+            UnityEngine.Debug.Log("adjust: Adjust deeplink successfully added to your app's AndroidManifest.xml file.");
         }
     }
 
@@ -247,7 +416,7 @@ public class AdjustEditor {
         // Let's now check if user has already defined a receiver which is listening to INSTALL_REFERRER intent.
         // If that is already defined, don't force the adjust broadcast receiver to the manifest file.
         // If not, add the adjust broadcast receiver to the manifest file.
-        bool isThereAnyCustomBroadcastReiver = false;
+        bool isThereAnyCustomBroadcastReceiver = false;
 
         foreach (XmlNode node in applicationNode.ChildNodes) {
             if (node.Name == "receiver") {
@@ -257,31 +426,31 @@ public class AdjustEditor {
                             if (subsubnode.Name == "action") {
                                 foreach(XmlAttribute attribute in subsubnode.Attributes) {
                                     if (attribute.Value.Contains("INSTALL_REFERRER")) {
-                                        isThereAnyCustomBroadcastReiver = true;
+                                        isThereAnyCustomBroadcastReceiver = true;
                                         break;
                                     }
                                 }
                             }
 
-                            if (isThereAnyCustomBroadcastReiver) {
+                            if (isThereAnyCustomBroadcastReceiver) {
                                 break;
                             }
                         }
                     }
 
-                    if (isThereAnyCustomBroadcastReiver) {
+                    if (isThereAnyCustomBroadcastReceiver) {
                         break;
                     }
                 }
             }
 
-            if (isThereAnyCustomBroadcastReiver) {
+            if (isThereAnyCustomBroadcastReceiver) {
                 break;
             }
         }
 
         // Let's see what we have found so far.
-        if (isThereAnyCustomBroadcastReiver) {
+        if (isThereAnyCustomBroadcastReceiver) {
             UnityEngine.Debug.Log("adjust: It seems like you are using your own broadcast receiver.");
             UnityEngine.Debug.Log("adjust: Please, add the calls to the adjust broadcast receiver like described in here: https://github.com/adjust/android_sdk/blob/master/doc/english/referrer.md");
         } else {
