@@ -17,16 +17,48 @@ namespace com.adjust.sdk {
         private static Action<AdjustSessionFailure> sessionFailureDelegate = null;
         private static Action<AdjustAttribution> attributionChangedDelegate = null;
 
-        public bool startManually = true;
-        public bool eventBuffering = false;
-        public bool printAttribution = true;
-        public bool sendInBackground = false;
-        public bool launchDeferredDeeplink = true;
+        public bool startManually {
+            get {
+                return AdjustData.Instance.startManually;
+            }
+        }
+        public bool eventBuffering {
+            get {
+                return AdjustData.Instance.eventBuffering;
+            }
+        }
+        public bool printAttribution {
+            get {
+                return AdjustData.Instance.printAttribution;
+            }
+        }
+        public bool sendInBackground {
+            get {
+                return AdjustData.Instance.sendInBackground;
+            }
+        }
+        public bool launchDeferredDeeplink {
+            get {
+                return AdjustData.Instance.launchDeferredDeeplink;
+            }
+        }
 
-        public string appToken = "{Your App Token}";
+        public string appToken {
+            get {
+                return AdjustData.Instance.appToken;
+            }
+        }
 
-        public AdjustLogLevel logLevel = AdjustLogLevel.Info;
-        public AdjustEnvironment environment = AdjustEnvironment.Sandbox;
+        public AdjustLogLevel logLevel {
+            get {
+                return AdjustData.Instance.logLevel;
+            }
+        }
+        public AdjustEnvironment environment {
+            get {
+                return AdjustData.Instance.environment;
+            }
+        }
         #endregion
 
         #region Unity lifecycle methods
