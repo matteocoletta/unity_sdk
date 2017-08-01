@@ -201,3 +201,10 @@ unity_sdk*.sln
 # Exceptions #
 # ========== #
 !google-play-services_lib/AndroidManifest.xml
+
+# ========== #
+# VIM #
+# ========== #
+*~
+*.swp
+*.swo
