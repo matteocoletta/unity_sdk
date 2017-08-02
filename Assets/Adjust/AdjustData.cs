@@ -20,7 +20,8 @@ public class AdjustData : ScriptableObject {
     public AdjustLogLevel logLevel = AdjustLogLevel.Info;
     public AdjustEnvironment environment = AdjustEnvironment.Sandbox;
 
-    public string appScheme = "{Your App Scheme}";
+    public string androidAppScheme = "{Your Android App Scheme}";
+    public string iOSAppScheme = "{Your iOS App Scheme}";
 
     private const string ADAssetPath = "Adjust/Resources";
     private const string ADAssetName = "AdjustData";

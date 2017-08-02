@@ -30,7 +30,8 @@ public class AdjustEditor: Editor {
         SerializedProperty serializedLaunchDeferredDeeplink = serializedAdjustData.FindProperty("launchDeferredDeeplink");
         SerializedProperty serializedLogLevel = serializedAdjustData.FindProperty("logLevel");
         SerializedProperty serializedEnvironment = serializedAdjustData.FindProperty("environment");
-        SerializedProperty serializedAppScheme = serializedAdjustData.FindProperty("appScheme");
+        SerializedProperty serializedAndroidAppScheme = serializedAdjustData.FindProperty("androidAppScheme");
+        SerializedProperty serializediOSAppScheme = serializedAdjustData.FindProperty("iOSAppScheme");
 
         EditorGUILayout.PropertyField(serializedAppToken, new GUILayoutOption[]{});
         EditorGUILayout.PropertyField(serializedEventBuffering, new GUILayoutOption[]{});
@@ -40,7 +41,8 @@ public class AdjustEditor: Editor {
         EditorGUILayout.PropertyField(serializedLaunchDeferredDeeplink, new GUILayoutOption[]{});
         EditorGUILayout.PropertyField(serializedLogLevel, new GUILayoutOption[]{});
         EditorGUILayout.PropertyField(serializedEnvironment, new GUILayoutOption[]{});
-        EditorGUILayout.PropertyField(serializedAppScheme, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializedAndroidAppScheme, new GUILayoutOption[]{});
+        EditorGUILayout.PropertyField(serializediOSAppScheme, new GUILayoutOption[]{});
 
         GUI.enabled = true;
 
@@ -49,6 +51,12 @@ public class AdjustEditor: Editor {
             GUI.changed = false;
             AssetDatabase.Refresh();
         }
+
+        //if (GUILayout.Button("Update iOS plist", new GUILayoutOption[]{})) {
+        ////RunPostBuildScript(target:BuildTarget.iOS, preBuild:false, projectPath:Application.dataPath);
+        ////GUI.changed = false;
+        ////AssetDatabase.Refresh();
+        //}
 
         if (GUI.changed) {
             serializedAdjustData.ApplyModifiedProperties();
@@ -83,7 +91,6 @@ public class AdjustEditor: Editor {
             RunPostBuildScript(target:target, preBuild:false, projectPath:projectPath);
         }
 
-    //TODO: projectPath is by default empty but its important. Test it with iOS and see what it returns
     private static void RunPostBuildScript(BuildTarget target, bool preBuild, string projectPath = "") {
         if (target == BuildTarget.Android) {
             UnityEngine.Debug.Log("adjust: Starting to perform post build tasks for Android platform.");
@@ -349,7 +356,7 @@ public class AdjustEditor: Editor {
             categoryElement2.SetAttribute("android__name", "android.intent.category.BROWSABLE");
 
             XmlElement dataElement = manifest.CreateElement("data");
-            dataElement.SetAttribute("android__scheme", AdjustData.Instance.appScheme);
+            dataElement.SetAttribute("android__scheme", AdjustData.Instance.androidAppScheme);
 
             intentFilterElement.AppendChild(actionElement);
             intentFilterElement.AppendChild(categoryElement1);
