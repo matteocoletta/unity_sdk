@@ -140,6 +140,36 @@ public class AdjustEditor: Editor {
 
         // Save the changes to Xcode project file.
         xcodeProject.WriteToFile(xcodeProjectPath);
+
+        //Modify .plist to support deeplinking
+        string plistPath = Path.Combine(projectPath, "Info.plist");
+        if (!File.Exists(plistPath)) {
+            UnityEngine.Debug.Log("adjust: Couldn't find project Info.plist");
+            return;
+        } 
+
+        PlistDocument plist = new PlistDocument();
+        var plistText = File.ReadAllText(plistPath);
+        if(plistText.Contains("CFBundleURLTypes")) {
+            UnityEngine.Debug.Log("adjust: Looks like you already have URL scheme in your Info.plist. Please modify it yourself according to your needs");
+            return;
+        }
+
+        plist.ReadFromString(plistText);
+
+        // Get root
+        PlistElementDict rootDict = plist.root;
+
+        var urlTypesArr = rootDict.CreateArray("CFBundleURLTypes");
+        var dict = urlTypesArr.AddDict();
+
+        var schemeArr = dict.CreateArray("CFBundleURLSchemes");
+        schemeArr.AddString(AdjustData.Instance.iOSAppScheme);
+
+        dict.SetString("CFBundleURLName", PlayerSettings.applicationIdentifier);
+
+        // Write to file
+        File.WriteAllText(plistPath, plist.WriteToString());
 #endif
     }
 
