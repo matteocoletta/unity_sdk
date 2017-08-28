@@ -46,8 +46,8 @@ public class AdjustData : ScriptableObject {
 
 #if UNITY_EDITOR
 
-            if (!Directory.Exists(ADAssetPath)) {
-                Directory.CreateDirectory(ADAssetPath);
+            if (!Directory.Exists(Path.Combine("Assets", ADAssetPath))) {
+                Directory.CreateDirectory(Path.Combine("Assets", ADAssetPath));
                 AssetDatabase.Refresh();
             }
 
