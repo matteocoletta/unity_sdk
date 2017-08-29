@@ -15,6 +15,10 @@ namespace com.adjust.sdk {
         private static AndroidJavaClass ajcAdjust;
         private AndroidJavaObject ajoCurrentActivity;
 
+        private string lastDeeplink;
+        private DateTime lastDeeplinkTime;
+
+        private Action<string> onDeeplinkListener;
         private DeferredDeeplinkListener onDeferredDeeplinkListener;
         private AttributionChangeListener onAttributionChangedListener;
         private EventTrackingFailedListener onEventTrackingFailedListener;
@@ -135,6 +139,11 @@ namespace com.adjust.sdk {
                 onDeferredDeeplinkListener = new DeferredDeeplinkListener(adjustConfig.deferredDeeplinkDelegate);
                 ajoAdjustConfig.Call("setOnDeeplinkResponseListener", onDeferredDeeplinkListener);
             }
+
+            // Check deeplink delegate setting.
+            if (adjustConfig.deeplinkDelegate != null) {
+                onDeeplinkListener = adjustConfig.deeplinkDelegate;
+            }            
 
             // Set unity SDK prefix.
             ajoAdjustConfig.Call("setSdkPrefix", sdkPrefix);
@@ -531,11 +540,44 @@ namespace com.adjust.sdk {
                 return;
             }
 
+            if (ajcAdjust == null) {
+                return;
+            }
+
             // If app was maybe opened from a deep link click.
             AndroidJavaObject ajoIntent = ajoCurrentActivity.Call<AndroidJavaObject>("getIntent");
             AndroidJavaObject ajoUri = ajoIntent.Call<AndroidJavaObject>("getData");
 
-            ajcAdjust.CallStatic("appWillOpenUrl", ajoUri);
+            if (ajoUri == null) {
+                return;
+            }
+
+            // Cache deep link information to prevent doubled triggering of SDK and callback.
+            DateTime newNow = DateTime.Now;
+            string deeplink = ajoUri.Call<string>("toString");
+
+            if (this.lastDeeplink == null) {
+                sendDeeplink(deeplink, ajoUri, newNow);
+            } else {
+                if (this.lastDeeplink.Equals(deeplink)) {
+                    if (this.lastDeeplinkTime.AddMinutes(1) < newNow) {
+                        sendDeeplink(deeplink, ajoUri, newNow);
+                    }
+                } else {
+                    sendDeeplink(deeplink, ajoUri, newNow);
+                }
+            }
+        }
+
+        private void sendDeeplink(string deeplink, AndroidJavaObject ajoDeeplink, DateTime timestamp) {
+            this.lastDeeplink = deeplink;
+            this.lastDeeplinkTime = timestamp;
+
+            ajcAdjust.CallStatic("appWillOpenUrl", ajoDeeplink);
+
+            if (this.onDeeplinkListener != null) {
+                this.onDeeplinkListener(deeplink);
+            }
         }
         #endregion
     }

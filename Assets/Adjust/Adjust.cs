@@ -22,21 +22,25 @@ namespace com.adjust.sdk {
                 return AdjustData.Instance.startManually;
             }
         }
+
         public bool eventBuffering {
             get {
                 return AdjustData.Instance.eventBuffering;
             }
         }
+
         public bool printAttribution {
             get {
                 return AdjustData.Instance.printAttribution;
             }
         }
+
         public bool sendInBackground {
             get {
                 return AdjustData.Instance.sendInBackground;
             }
         }
+
         public bool launchDeferredDeeplink {
             get {
                 return AdjustData.Instance.launchDeferredDeeplink;
@@ -54,6 +58,7 @@ namespace com.adjust.sdk {
                 return AdjustData.Instance.logLevel;
             }
         }
+
         public AdjustEnvironment environment {
             get {
                 return AdjustData.Instance.environment;
@@ -80,6 +85,7 @@ namespace com.adjust.sdk {
                 adjustConfig.setLaunchDeferredDeeplink(this.launchDeferredDeeplink);
 
                 if (printAttribution) {
+                    adjustConfig.setDeeplinkDelegate(DeeplinkCallback);
                     adjustConfig.setEventSuccessDelegate(EventSuccessCallback);
                     adjustConfig.setEventFailureDelegate(EventFailureCallback);
                     adjustConfig.setSessionSuccessDelegate(SessionSuccessCallback);
@@ -345,18 +351,17 @@ namespace com.adjust.sdk {
 
         #region Attribution callback
 
-        public static void runAttributionChangedDictionary(Dictionary<string, string> dicAttributionData)
-        {
-            if (instance == null)
-            {
+        public static void runAttributionChangedDictionary(Dictionary<string, string> dicAttributionData) {
+            if (instance == null) {
                 Debug.Log(Adjust.errorMessage);
                 return;
             }
-            if (Adjust.attributionChangedDelegate == null)
-            {
+
+            if (Adjust.attributionChangedDelegate == null) {
                 Debug.Log("adjust: Attribution changed delegate was not set.");
                 return;
             }
+
             var attribution = new AdjustAttribution(dicAttributionData);
             Adjust.attributionChangedDelegate(attribution);
         }
@@ -588,6 +593,17 @@ namespace com.adjust.sdk {
         // Our delegate for getting deferred deep link content if chosen not to start manually.
         private void DeferredDeeplinkCallback(string deeplinkURL) {
             Debug.Log("Deferred deeplink reported!");
+
+            if (deeplinkURL != null) {
+                Debug.Log("Deeplink URL: " + deeplinkURL);
+            } else {
+                Debug.Log("Deeplink URL is null!");
+            }
+        }
+
+        // Our delegate for getting deep link content if chosen not to start manually.
+        private void DeeplinkCallback(string deeplinkURL) {
+            Debug.Log("Deeplink reported!");
 
             if (deeplinkURL != null) {
                 Debug.Log("Deeplink URL: " + deeplinkURL);

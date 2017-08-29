@@ -18,6 +18,7 @@ namespace com.adjust.sdk {
         internal AdjustLogLevel? logLevel;
         internal AdjustEnvironment environment;
 
+        internal Action<string> deeplinkDelegate;
         internal Action<string> deferredDeeplinkDelegate;
         internal Action<AdjustEventSuccess> eventSuccessDelegate;
         internal Action<AdjustEventFailure> eventFailureDelegate;
@@ -76,6 +77,15 @@ namespace com.adjust.sdk {
 
         public void setUserAgent(string userAgent) {
             this.userAgent = userAgent;
+        }
+
+        public void setDeeplinkDelegate(Action<string> deeplinkDelegate, string sceneName = "Adjust") {
+            this.deeplinkDelegate = deeplinkDelegate;
+            this.sceneName = sceneName;
+        }
+
+        public Action<string> getDeeplinkDelegate() {
+            return this.deeplinkDelegate;
         }
 
         public void setDeferredDeeplinkDelegate(Action<string> deferredDeeplinkDelegate, string sceneName = "Adjust") {
