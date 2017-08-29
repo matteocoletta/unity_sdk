@@ -190,6 +190,7 @@ src/
 src.meta
 ProjectSettings/
 Scripts/Unity4Assets
+Resources.meta
 
 # ======================= #
 # Unity Project necessary #
