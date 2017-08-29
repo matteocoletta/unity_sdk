@@ -145,6 +145,9 @@ namespace com.adjust.sdk {
             // Initialise and start the SDK.
             ajcAdjust.CallStatic("onCreate", ajoAdjustConfig);
             ajcAdjust.CallStatic("onResume");
+
+            // Check after launching SDK if app was maybe opened from a deep link click.
+            checkForDeepLink();
         }
 
         public void trackEvent(AdjustEvent adjustEvent) {
@@ -283,6 +286,7 @@ namespace com.adjust.sdk {
         
         public void onResume() {
             ajcAdjust.CallStatic("onResume");
+            checkForDeepLink();
         }
 
         public void setReferrer(string referrer) {
@@ -518,6 +522,20 @@ namespace com.adjust.sdk {
 
                 this.onGoogleAdIdRead(ajoAdId.Call<string>("toString"));
             }
+        }
+        #endregion
+
+        #region Private & helper methods
+        private void checkForDeepLink() {
+            if (ajoCurrentActivity == null) {
+                return;
+            }
+
+            // If app was maybe opened from a deep link click.
+            AndroidJavaObject ajoIntent = ajoCurrentActivity.Call<AndroidJavaObject>("getIntent");
+            AndroidJavaObject ajoUri = ajoIntent.Call<AndroidJavaObject>("getData");
+
+            ajcAdjust.CallStatic("appWillOpenUrl", ajoUri);
         }
         #endregion
     }
