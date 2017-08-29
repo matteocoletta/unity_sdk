@@ -93,6 +93,8 @@ public class AdjustEditor: Editor {
 
     private static void RunPostBuildScript(BuildTarget target, bool preBuild, string projectPath = "") {
         if (target == BuildTarget.Android) {
+            //'projectPath' for Android should point to the project's directory
+            projectPath = Application.dataPath;
             UnityEngine.Debug.Log("adjust: Starting to perform post build tasks for Android platform.");
             RunPostProcessTasksAndroid(projectPath);
         } else if (target == BuildTarget.iOS) {
