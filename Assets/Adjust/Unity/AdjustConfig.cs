@@ -10,10 +10,16 @@ namespace com.adjust.sdk {
         internal string userAgent;
         internal string defaultTracker;
 
+        internal bool? deviceKnown;
         internal bool? sendInBackground;
         internal bool? eventBufferingEnabled;
         internal bool? allowSuppressLogLevel;
         internal bool launchDeferredDeeplink;
+
+        internal long? info1;
+        internal long? info2;
+        internal long? info3;
+        internal long? info4;
 
         internal AdjustLogLevel? logLevel;
         internal AdjustEnvironment environment;
@@ -63,6 +69,10 @@ namespace com.adjust.sdk {
             this.launchDeferredDeeplink = launchDeferredDeeplink;
         }
 
+        public void setDeviceKnown(bool isDeviceKnown) {
+            this.deviceKnown = isDeviceKnown;
+        }
+
         public void setSendInBackground(bool sendInBackground) {
             this.sendInBackground = sendInBackground;
         }
@@ -77,6 +87,13 @@ namespace com.adjust.sdk {
 
         public void setUserAgent(string userAgent) {
             this.userAgent = userAgent;
+        }
+
+        public void setAppSecret(long info1, long info2, long info3, long info4) {
+            this.info1 = info1;
+            this.info2 = info2;
+            this.info3 = info3;
+            this.info4 = info4;
         }
 
         public void setDeeplinkDelegate(Action<string> deeplinkDelegate, string sceneName = "Adjust") {
