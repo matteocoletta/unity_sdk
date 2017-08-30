@@ -84,6 +84,11 @@ namespace com.adjust.sdk {
                 ajoAdjustConfig.Call("setEventBufferingEnabled", ajoIsEnabled);
             }
 
+            // Check if user marked this device as known.
+            if (adjustConfig.deviceKnown != null) {
+                ajoAdjustConfig.Call("setDeviceKnown", adjustConfig.deviceKnown.Value);
+            }
+
             // Check if user enabled tracking in the background.
             if (adjustConfig.sendInBackground != null) {
                 ajoAdjustConfig.Call("setSendInBackground", adjustConfig.sendInBackground.Value);
@@ -102,6 +107,11 @@ namespace com.adjust.sdk {
             // Check if user has set default tracker token.
             if (adjustConfig.defaultTracker != null) {
                 ajoAdjustConfig.Call("setDefaultTracker", adjustConfig.defaultTracker);
+            }
+
+            // Check if user has set app secret.
+            if (adjustConfig.info1 != null && adjustConfig.info2 != null && adjustConfig.info3 != null && adjustConfig.info4 != null) {
+                ajoAdjustConfig.Call("setAppSecret", adjustConfig.info1, adjustConfig.info2, adjustConfig.info3, adjustConfig.info4);
             }
 
             // Check attribution changed delagate setting.
