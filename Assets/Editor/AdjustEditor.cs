@@ -233,11 +233,13 @@ public class AdjustEditor: Editor {
         // The adjust SDK needs two permissions to be added to you app's manifest file:
         // <uses-permission android:name="android.permission.INTERNET" />
         // <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+        // <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
         UnityEngine.Debug.Log("adjust: Checking if all permissions needed for the adjust SDK are present in the app's AndroidManifest.xml file.");
 
         bool hasInternetPermission = false;
         bool hasAccessWifiStatePermission = false;
+        bool hasAccessNetworkStatePermission = false;
 
         XmlElement manifestRoot = manifest.DocumentElement;
 
@@ -249,6 +251,8 @@ public class AdjustEditor: Editor {
                         hasInternetPermission = true;
                     } else if (attribute.Value.Contains("android.permission.ACCESS_WIFI_STATE")) {
                         hasAccessWifiStatePermission = true;
+                    } else if (attribute.Value.Contains("android.permission.ACCESS_NETWORK_STATE")) {
+                        hasAccessNetworkStatePermission = true;
                     }
                 }
             }
@@ -274,6 +278,17 @@ public class AdjustEditor: Editor {
             UnityEngine.Debug.Log("adjust: android.permission.ACCESS_WIFI_STATE permission successfully added to your app's AndroidManifest.xml file.");
         } else {
             UnityEngine.Debug.Log("adjust: Your app's AndroidManifest.xml file already contains android.permission.ACCESS_WIFI_STATE permission.");
+        }
+
+        // If android.permission.ACCESS_NETWORK_STATE permission is missing, add it.
+        if (!hasAccessNetworkStatePermission) {
+            XmlElement element = manifest.CreateElement("uses-permission");
+            element.SetAttribute("android__name", "android.permission.ACCESS_NETWORK_STATE");
+            manifestRoot.AppendChild(element);
+
+            UnityEngine.Debug.Log("adjust: android.permission.ACCESS_NETWORK_STATE permission successfully added to your app's AndroidManifest.xml file.");
+        } else {
+            UnityEngine.Debug.Log("adjust: Your app's AndroidManifest.xml file already contains android.permission.ACCESS_NETWORK_STATE permission.");
         }
     }
 
