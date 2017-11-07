@@ -9,7 +9,7 @@ SDK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SDK_DIR="$(dirname "$SDK_DIR")"
 SDK_DIR="$(dirname "$SDK_DIR")"
 BUILD_DIR=sdk/Adjust
-JAR_IN_DIR=adjust/build/intermediates/bundles/default
+JAR_IN_DIR=adjust/build/intermediates/bundles/debug
 JAR_OUT_DIR=Assets/Adjust/Android
 
 RED='\033[0;31m' # Red color
