@@ -23,10 +23,10 @@ This is the Unity SDK of Adjust™. It supports iOS, Android, Windows Store 8.1,
 ### Deep linking
 
 * [Deep linking](#deeplinking)
-      * [Standard deep linking scenario](#deeplinking-standard)
-      * [Deferred deep linking scenario](#deeplinking-deferred)
-      * [Deep linking handling in Android app](#deeplinking-app-android)
-      * [Deep linking handling in iOS app](#deeplinking-app-ios)     
+   * [Standard deep linking scenario](#deeplinking-standard)
+   * [Deferred deep linking scenario](#deeplinking-deferred)
+   * [Deep linking handling in Android app](#deeplinking-app-android)
+   * [Deep linking handling in iOS app](#deeplinking-app-ios)     
 
 ### Event Tracking
 
