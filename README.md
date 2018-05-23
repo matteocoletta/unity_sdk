@@ -4,9 +4,11 @@ This is the Unity SDK of Adjust™. It supports iOS, Android, Windows Store 8.1,
 
 **Note**: As of version **4.12.0**, Adjust Unity SDK is compatible with **Unity 5 and newer** versions.
 
-## Table of contents
+---
 
-* [Basic integration](#basic-integration)
+### Quick Start
+
+* [Getting Started](#getting-started)
    * [Get the SDK](#sdk-get)
    * [Add the SDK to your project](#sdk-add)
    * [Integrate the SDK into your app](#sdk-integrate)
@@ -17,17 +19,35 @@ This is the Unity SDK of Adjust™. It supports iOS, Android, Windows Store 8.1,
    * [Post build process](#post-build-process)
       * [iOS post build process](#post-build-ios)
       * [Android post build process](#post-build-android)
-* [Additional features](#additional-features)
+      
+### Deep linking
+
+* [Deep linking](#deeplinking)
+      * [Standard deep linking scenario](#deeplinking-standard)
+      * [Deferred deep linking scenario](#deeplinking-deferred)
+      * [Deep linking handling in Android app](#deeplinking-app-android)
+      * [Deep linking handling in iOS app](#deeplinking-app-ios)     
+
+### Event Tracking
+
    * [Event tracking](#event-tracking)
       * [Revenue tracking](#revenue-tracking)
       * [Revenue deduplication](#revenue-deduplication)
       * [In-App Purchase verification](#iap-verification)
-      * [Callback parameters](#callback-parameters)
-      * [Partner parameters](#partner-parameters)
+
+### Custom Parameters
+
+   * [Event Parameters](#event-parameters)
+     * [Event callback parameters](#callback-parameters)
+     * [Event partner parameters](#partner-parameters)
    * [Session parameters](#session-parameters)
-      * [Session callback parameters](#session-callback-parameters)
-      * [Session partner parameters](#session-partner-parameters)
-      * [Delay start](#delay-start)
+     * [Session callback parameters](#session-callback-parameters)
+     * [Session partner parameters](#session-partner-parameters)
+   * [Delay start](#delay-start)
+   
+### Additional Features
+
+   * [Push token (Uninstall/Reinstall tracking)](#push-token)
    * [Attribution callback](#attribution-callback)
    * [Session and event callbacks](#session-event-callbacks)
    * [Disable tracking](#disable-tracking)
@@ -42,19 +62,17 @@ This is the Unity SDK of Adjust™. It supports iOS, Android, Windows Store 8.1,
       * [Amazon advertising identifier](#di-fire-adid)
       * [Adjust device identifier](#di-adid)
    * [User attribution](#user-attribution)
-   * [Push token](#push-token)
    * [Track additional device identifiers](#track-additional-ids)
    * [Pre-installed trackers](#pre-installed-trackers)
-   * [Deep linking](#deeplinking)
-      * [Standard deep linking scenario](#deeplinking-standard)
-      * [Deferred deep linking scenario](#deeplinking-deferred)
-      * [Deep linking handling in Android app](#deeplinking-app-android)
-      * [Deep linking handling in iOS app](#deeplinking-app-ios)
-* [Troubleshooting](#troubleshooting)
-   * [Debug information in iOS](#ts-debug-ios)
-* [License](#license)
 
-## <a id="basic-integration"></a>Basic integration
+### Testing and Troubleshooting
+
+   * [Debug information in iOS](#ts-debug-ios)
+   * [License](#license)
+
+---
+
+## <a id="early-steps"></a>Quick Start
 
 These are the minimal steps required to integrate the Adjust SDK into your Unity project.
 
@@ -227,9 +245,77 @@ Android post build process initially checks for the presence of `AndroidManifest
 - Adds the `BIND_GET_INSTALL_REFERRER_SERVICE` permission (needed for new Google install referrer API to work).
 - Adds the Adjust broadcast receiver (needed for obtaining install referrer information via Google Play Store intent). For more details, consult the official [Android SDK README][android]. Please, have in mind that if you are using your **own broadcast receiver** which handles `INSTALL_REFERRER` intent, you don't need the Adjust broadcast receiver to be added in your manifest file. Remove it, but inside your own receiver add the call to the Adjust broadcast receiver like described in [Android guide][android-custom-receiver].
 
-## <a id="additional-features"></a>Additional features
+## Deep linking
 
-Once you integrated the Adjust SDK into your project, you can take advantage of the following features.
+### <a id="deeplinking"></a>Deep linking
+
+**Deep linking is supported only on iOS and Android platforms.**
+
+If you are using the Adjust tracker URL with an option to deep link into your app from the URL, there is the possibility to get information about the deep link URL and its content. Hitting the URL can happen when the user already has your app installed (standard deep linking scenario) or if they don't have the app on their device (deferred deep linking scenario). In the standard deep linking scenario, the Android platform natively offers the possibility for you to get the information about the deep link content. The deferred deep linking scenario is something that the Android platform doesn't support out of the box; in this case, the Adjust SDK will offer you the mechanism to get the information about the deep link content.
+
+You need to set up deep linking handling in your app **on native level** - in your generated Xcode project (for iOS) and Android Studio / Eclipse project (for Android).
+
+#### <a id="deeplinking-standard"></a>Standard deep linking scenario
+
+Unfortunately, in this scenario the information about the deep link can not be delivered to you in your Unity C# code. Once you enable your app to handle deep linking, you will get information about the deep link on native level. For more information check our chapters below on how to enable deep linking for Android and iOS apps.
+
+#### <a id="deeplinking-deferred"></a>Deferred deep linking scenario
+
+In order to get information about the URL content in a deferred deep linking scenario, you should set a callback method on the `AdjustConfig` object which will receive one `string` parameter where the content of the URL will be delivered. You should set this method on the config object by calling the method `setDeferredDeeplinkDelegate`:
+
+```cs
+// ...
+
+private void DeferredDeeplinkCallback(string deeplinkURL) {
+   Debug.Log("Deeplink URL: " + deeplinkURL);
+
+   // ...
+}
+
+AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
+
+adjustConfig.setDeferredDeeplinkDelegate(DeferredDeeplinkCallback);
+
+Adjust.start(adjustConfig);
+```
+
+<a id="deeplinking-deferred-open">In deferred deep linking scenario, there is one additional setting which can be set on the `AdjustConfig` object. Once the Adjust SDK gets the deferred deep link information, we offer you the possibility to choose whether our SDK should open this URL or not. You can choose to set this option by calling the `setLaunchDeferredDeeplink` method on the config object:
+
+```cs
+// ...
+
+private void DeferredDeeplinkCallback(string deeplinkURL) {
+   Debug.Log ("Deeplink URL: " + deeplinkURL);
+
+   // ...
+}
+
+AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
+
+adjustConfig.setLaunchDeferredDeeplink(true);
+adjustConfig.setDeferredDeeplinkDelegate(DeferredDeeplinkCallback);
+
+Adjust.start(adjustConfig);
+```
+
+If nothing is set, **the Adjust SDK will always try to launch the URL by default**.
+
+To enable your apps to support deep linking, you should set up schemes for each supported platform.
+
+#### <a id="deeplinking-app-android"></a>Deep linking handling in Android app
+
+**This should be done in native Android Studio / Eclipse project.**
+
+To set up your Android app to handle deep linking on native level, please follow our [guide][android-deeplinking] in the official Android SDK README.
+
+#### <a id="deeplinking-app-ios"></a>Deep linking handling in iOS app
+
+**This should be done in native Xcode project.**
+
+To set up your iOS app to handle deep linking on native level, please follow our [guide][ios-deeplinking] in the official iOS SDK README.
+
+
+## Event Tracking
 
 ### <a id="event-tracking"></a>Event tracking
 
@@ -269,7 +355,11 @@ Adjust.trackEvent(adjustEvent);
 
 If you want to check the validity of In-App Purchases made in your app using Purchase Verification, Adjust's server side receipt verification tool, then check out our `Unity purchase SDK` and read more about it [here][unity-purchase-sdk].
 
-#### <a id="callback-parameters"></a>Callback parameters
+
+## Custom Parameters
+
+### <a id="event-parameters"></a>Event parameters
+### <a id="callback-parameters"></a>Event callback parameters
 
 You can also register a callback URL for that event in your [dashboard] and we will send a GET request to that URL whenever the event gets tracked. In that case you can also put some key-value pairs in an object and pass it to the `trackEvent` method. We will then append these named parameters to your callback URL.
 
@@ -292,7 +382,7 @@ http://www.adjust.com/callback?key=value&foo=bar
 
 It should be mentioned that we support a variety of placeholders like `{idfa}` for iOS or `{gps_adid}` for Android that can be used as parameter values.  In the resulting callback, the `{idfa}` placeholder would be replaced with the ID for advertisers of the current device for iOS and the `{gps_adid}` would be replaced with the Google Play Services ID of the current device for Android. Also note that we don't store any of your custom parameters, but only append them to your callbacks. If you haven't registered a callback for an event, these parameters won't even be read.
 
-#### <a id="partner-parameters"></a>Partner parameters
+### <a id="partner-parameters"></a>Event partner parameters
 
 You can also add parameters to be transmitted to network partners, for the integrations that have been activated in your Adjust dashboard.
 
@@ -365,6 +455,7 @@ If you wish to remove all key and values from the session partner parameters, yo
 Adjust.resetSessionPartnerParameters();
 ```
 
+
 ### <a id="delay-start"></a>Delay start
 
 Delaying the start of the Adjust SDK allows your app some time to obtain session parameters, such as unique identifiers, to be send on install.
@@ -378,6 +469,21 @@ adjustConfig.setDelayStart(5.5);
 In this case the Adjust SDK not send the initial install session and any event created for 5.5 seconds. After this time is expired or if you call `Adjust.sendFirstPackages()` in the meanwhile, every session parameter will be added to the delayed install session and events and the Adjust SDK will resume as usual.
 
 **The maximum delay start time of the Adjust SDK is 10 seconds**.
+
+## <a id="additional-features"></a>Additional features
+
+Once you integrated the Adjust SDK into your project, you can take advantage of the following features.
+
+### <a id="push-token"></a>Push token (Uninstall/Reinstall tracking)
+
+To send us the push notification token, please call `setDeviceToken` method on the `Adjust` instance **when you obtain your app's push notification token and when ever it changes it's value**:
+
+```cs
+Adjust.setDeviceToken("YourPushNotificationToken");
+```
+
+Push tokens are used for Audience Builder and client callbacks, and they are required for the upcoming uninstall tracking feature.
+
 
 ### <a id="attribution-callback"></a>Attribution callback
 
@@ -645,15 +751,6 @@ AdjustAttribution attribution = Adjust.getAttribution();
 
 **Note**: Information about current attribution is available after app installation has been tracked by the Adjust backend and the attribution callback has been initially triggered. From that moment on, the Adjust SDK has information about a user's attribution and you can access it with this method. So, **it is not possible** to access a user's attribution value before the SDK has been initialized and an attribution callback has been triggered.
 
-### <a id="push-token"></a>Push token
-
-To send us the push notification token, please call `setDeviceToken` method on the `Adjust` instance **when you obtain your app's push notification token and when ever it changes it's value**:
-
-```cs
-Adjust.setDeviceToken("YourPushNotificationToken");
-```
-
-Push tokens are used for Audience Builder and client callbacks, and they are required for the upcoming uninstall tracking feature.
 
 ### <a id="track-additional-ids"></a>Track additional device identifiers
 
@@ -698,74 +795,9 @@ If you want to use the Adjust SDK to recognize users that found your app pre-ins
     Default tracker: 'abc123'
     ```
 
-### <a id="deeplinking"></a>Deep linking
 
-**Deep linking is supported only on iOS and Android platforms.**
 
-If you are using the Adjust tracker URL with an option to deep link into your app from the URL, there is the possibility to get information about the deep link URL and its content. Hitting the URL can happen when the user already has your app installed (standard deep linking scenario) or if they don't have the app on their device (deferred deep linking scenario). In the standard deep linking scenario, the Android platform natively offers the possibility for you to get the information about the deep link content. The deferred deep linking scenario is something that the Android platform doesn't support out of the box; in this case, the Adjust SDK will offer you the mechanism to get the information about the deep link content.
-
-You need to set up deep linking handling in your app **on native level** - in your generated Xcode project (for iOS) and Android Studio / Eclipse project (for Android).
-
-#### <a id="deeplinking-standard"></a>Standard deep linking scenario
-
-Unfortunately, in this scenario the information about the deep link can not be delivered to you in your Unity C# code. Once you enable your app to handle deep linking, you will get information about the deep link on native level. For more information check our chapters below on how to enable deep linking for Android and iOS apps.
-
-#### <a id="deeplinking-deferred"></a>Deferred deep linking scenario
-
-In order to get information about the URL content in a deferred deep linking scenario, you should set a callback method on the `AdjustConfig` object which will receive one `string` parameter where the content of the URL will be delivered. You should set this method on the config object by calling the method `setDeferredDeeplinkDelegate`:
-
-```cs
-// ...
-
-private void DeferredDeeplinkCallback(string deeplinkURL) {
-   Debug.Log("Deeplink URL: " + deeplinkURL);
-
-   // ...
-}
-
-AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
-
-adjustConfig.setDeferredDeeplinkDelegate(DeferredDeeplinkCallback);
-
-Adjust.start(adjustConfig);
-```
-
-<a id="deeplinking-deferred-open">In deferred deep linking scenario, there is one additional setting which can be set on the `AdjustConfig` object. Once the Adjust SDK gets the deferred deep link information, we offer you the possibility to choose whether our SDK should open this URL or not. You can choose to set this option by calling the `setLaunchDeferredDeeplink` method on the config object:
-
-```cs
-// ...
-
-private void DeferredDeeplinkCallback(string deeplinkURL) {
-   Debug.Log ("Deeplink URL: " + deeplinkURL);
-
-   // ...
-}
-
-AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
-
-adjustConfig.setLaunchDeferredDeeplink(true);
-adjustConfig.setDeferredDeeplinkDelegate(DeferredDeeplinkCallback);
-
-Adjust.start(adjustConfig);
-```
-
-If nothing is set, **the Adjust SDK will always try to launch the URL by default**.
-
-To enable your apps to support deep linking, you should set up schemes for each supported platform.
-
-#### <a id="deeplinking-app-android"></a>Deep linking handling in Android app
-
-**This should be done in native Android Studio / Eclipse project.**
-
-To set up your Android app to handle deep linking on native level, please follow our [guide][android-deeplinking] in the official Android SDK README.
-
-#### <a id="deeplinking-app-ios"></a>Deep linking handling in iOS app
-
-**This should be done in native Xcode project.**
-
-To set up your iOS app to handle deep linking on native level, please follow our [guide][ios-deeplinking] in the official iOS SDK README.
-
-## <a id="troubleshooting"></a>Troubleshooting
+## <a id="troubleshooting"></a>Testing and Troubleshooting
 
 ### <a id="ts-debug-ios"></a>Debug information in iOS
 
