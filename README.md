@@ -796,7 +796,12 @@ If you want to use the Adjust SDK to recognize users that found your app pre-ins
     Default tracker: 'abc123'
     ```
 
-
+### <a id="gdpr-forget-me"></a>GDPR right to be forgotten
+ In accordance with article 17 of the EU's General Data Protection Regulation (GDPR), you can notify Adjust when a user has exercised their right to be forgotten. Calling the following method will instruct the Adjust SDK to communicate the user's choice to be forgotten to the Adjust backend:
+ ```cs
+Adjust.gdprForgetMe();
+```
+ Upon receiving this information, Adjust will erase the user's data and the Adjust SDK will stop tracking the user. No requests from this device will be sent to Adjust in the future.
 
 ## <a id="troubleshooting"></a>Testing and Troubleshooting
 
@@ -805,13 +810,6 @@ If you want to use the Adjust SDK to recognize users that found your app pre-ins
 Even with the post build script it is possible that the project is not ready to run out of the box.
 
 If needed, disable dSYM File. In the `Project Navigator`, select the `Unity-iPhone` project. Click the `Build Settings` tab and search for `debug information`. There should be an `Debug Information Format` or `DEBUG_INFORMATION_FORMAT` option. Change it from `DWARF with dSYM File` to `DWARF`.
-
-### <a id="gdpr-forget-me"></a>GDPR right to be forgotten
- In accordance with article 17 of the EU's General Data Protection Regulation (GDPR), you can notify Adjust when a user has exercised their right to be forgotten. Calling the following method will instruct the Adjust SDK to communicate the user's choice to be forgotten to the Adjust backend:
- ```cs
-Adjust.gdprForgetMe();
-```
- Upon receiving this information, Adjust will erase the user's data and the Adjust SDK will stop tracking the user. No requests from this device will be sent to Adjust in the future.
 
 
 [dashboard]:               http://adjust.com
