@@ -64,11 +64,13 @@ This is the Unity SDK of Adjust™. It supports iOS, Android, Windows Store 8.1,
    * [Track additional device identifiers](#track-additional-ids)
    * [Pre-installed trackers](#pre-installed-trackers)
    * [GDPR right to be forgotten](#gdpr-forget-me)
+   
+### [License](#license)
 
 ### Testing and Troubleshooting
 
    * [Debug information in iOS](#ts-debug-ios)
-   * [License](#license)
+
 
 ---
 
