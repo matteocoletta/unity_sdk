@@ -16,6 +16,7 @@ This is the Unity SDK of Adjust™. It supports iOS, Android, Windows Store 8.1,
    * [Google Play Services](#google-play-services)
    * [Proguard settings](#android-proguard)
    * [Google Install Referrer](#google-install-referrer)
+   * [SDK Signature](#sdk-signature)
    * [Post build process](#post-build-process)
       * [iOS post build process](#post-build-ios)
       * [Android post build process](#post-build-android)
@@ -216,6 +217,22 @@ In order to correctly attribute an install of your Android app to its source, Ad
 **Important**: The Google Play Referrer API is newly introduced by Google with the express purpose of providing a more reliable and secure way of obtaining install referrer information and to aid attribution providers in the fight against click injection. It is **strongly advised** that you support this in your application. The Google Play Store intent is a less secure way of obtaining install referrer information. It will continue to exist in parallel with the new Google Play Referrer API temporarily, but it is set to be deprecated in future.
 
 To add support for it, download [install referrer library][install-referrer-aar] from Maven repository. Place AAR file into your `Plugins/Android` folder and that's it. Adjust post build process will take care of needed `AndroidManifest.xml` adjustments.
+
+### <a id="sdk-signature"></a>SDK signature
+
+An account manager must activate the Adjust SDK signature. Contact Adjust support (support@adjust.com) if you are interested in using this feature.
+
+If the SDK signature has already been enabled on your account and you have access to App Secrets in your Adjust Dashboard, please use the method below to integrate the SDK signature into your app.
+
+An App Secret is set by passing all secret parameters (`secretId`, `info1`, `info2`, `info3`, `info4`) to `setAppSecret` method of `AdjustConfig` instance:
+
+```cs
+AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
+
+adjustConfig.setAppSecret(secretId, info1, info2, info3, info4);
+
+Adjust.start(adjustConfig);
+```
 
 ### <a id="post-build-process"></a>Post build process
 
@@ -769,22 +786,6 @@ Adjust.setEnabled(false);
 Conversely, you can deactivate offline mode by calling `setOfflineMode` with `false`. When the Adjust SDK is put back in online mode, all saved information is send to our servers with the correct time information.
 
 Unlike disabling tracking, **this setting is not remembered** between sessions. This means that the SDK is in online mode whenever it is started, even if the app was terminated in offline mode.
-
-### <a id="sdk-signature"></a>SDK signature
-
-An account manager must activate the Adjust SDK signature. Contact Adjust support (support@adjust.com) if you are interested in using this feature.
-
-If the SDK signature has already been enabled on your account and you have access to App Secrets in your Adjust Dashboard, please use the method below to integrate the SDK signature into your app.
-
-An App Secret is set by passing all secret parameters (`secretId`, `info1`, `info2`, `info3`, `info4`) to `setAppSecret` method of `AdjustConfig` instance:
-
-```cs
-AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
-
-adjustConfig.setAppSecret(secretId, info1, info2, info3, info4);
-
-Adjust.start(adjustConfig);
-```
 
 ### <a id="gdpr-forget-me"></a>GDPR right to be forgotten
  In accordance with article 17 of the EU's General Data Protection Regulation (GDPR), you can notify Adjust when a user has exercised their right to be forgotten. Calling the following method will instruct the Adjust SDK to communicate the user's choice to be forgotten to the Adjust backend:
