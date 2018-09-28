@@ -534,6 +534,16 @@ public class ExampleGUI : MonoBehaviour {
 }
 ```
 
+### <a id="user-attribution"></a>User attribution
+
+As described in the [attribution callback section](#attribution-callback), this callback is triggered, providing you with information about a new attribution whenever it changes. If you want to access information about a user's current attribution whenever you need it, you can make a call to the following method of the `Adjust` instance:
+
+```cs
+AdjustAttribution attribution = Adjust.getAttribution();
+```
+
+**Note**: Information about current attribution is available after app installation has been tracked by the Adjust backend and the attribution callback has been initially triggered. From that moment on, the Adjust SDK has information about a user's attribution and you can access it with this method. So, **it is not possible** to access a user's attribution value before the SDK has been initialized and an attribution callback has been triggered.
+
 ### <a id="session-event-callbacks"></a>Session and event callbacks
 
 You can register a callback to be notified of successful and failed events and/or sessions.
@@ -625,71 +635,7 @@ And both event and session failed objects also contain:
 
 - `bool WillRetry` indicates there will be an attempt to resend the package at a later time.
 
-### <a id="disable-tracking"></a>Disable tracking
-
-You can disable the Adjust SDK from tracking by invoking the method `setEnabled` with the enabled parameter as `false`. **This setting is remembered between sessions**, but it can only be activated after the first session.
-
-```cs
-Adjust.setEnabled(false);
-```
-
 You can verify if the Adjust SDK is currently active with the method `isEnabled`. It is always possible to activate the Adjust SDK by invoking `setEnabled` with the `enabled` parameter set to `true`.
-
-### <a id="offline-mode"></a>Offline mode
-
-You can put the Adjust SDK in offline mode to suspend transmission to our servers, while retaining tracked data to be sent later. When in offline mode, all information is saved in a file, so be careful not to trigger too many events.
-
-You can activate offline mode by calling `setOfflineMode` with the parameter `true`.
-
-```cs
-Adjust.setOfflineMode(true);
-```
-
-Conversely, you can deactivate offline mode by calling `setOfflineMode` with `false`. When the Adjust SDK is put back in online mode, all saved information is send to our servers with the correct time information.
-
-Unlike disabling tracking, **this setting is not remembered** between sessions. This means that the SDK is in online mode whenever it is started, even if the app was terminated in offline mode.
-
-### <a id="event-buffering"></a>Event buffering
-
-If your app makes heavy use of event tracking, you might want to delay some HTTP requests in order to send them in one batch every minute. You can enable event buffering with your `AdjustConfig` instance:
-
-```cs
-AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
-
-adjustConfig.setEventBufferingEnabled(true);
-
-Adjust.start(adjustConfig);
-```
-
-If nothing is set, event buffering is **disabled by default**.
-
-### <a id="sdk-signature"></a>SDK signature
-
-An account manager must activate the Adjust SDK signature. Contact Adjust support (support@adjust.com) if you are interested in using this feature.
-
-If the SDK signature has already been enabled on your account and you have access to App Secrets in your Adjust Dashboard, please use the method below to integrate the SDK signature into your app.
-
-An App Secret is set by passing all secret parameters (`secretId`, `info1`, `info2`, `info3`, `info4`) to `setAppSecret` method of `AdjustConfig` instance:
-
-```cs
-AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
-
-adjustConfig.setAppSecret(secretId, info1, info2, info3, info4);
-
-Adjust.start(adjustConfig);
-```
-
-### <a id="background-tracking"></a>Background tracking
-
-The default behaviour of the Adjust SDK is to **pause sending HTTP requests while the app is in the background**. You can change this in your `AdjustConfig` instance:
-
-```csharp
-AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
-
-adjustConfig.setSendInBackground(true);
-
-Adjust.start(adjustConfig);
-```
 
 ### <a id="device-ids"></a>Device IDs
 
@@ -733,17 +679,6 @@ String adid = Adjust.getAdid();
 
 **Note**: Information about **adid** is available after app installation has been tracked by the Adjust backend. From that moment on, the Adjust SDK has information about your device **adid** and you can access it with this method. So, **it is not possible** to access the **adid** value before the SDK has been initialised and installation of your app has been successfully tracked.
 
-### <a id="user-attribution"></a>User attribution
-
-As described in the [attribution callback section](#attribution-callback), this callback is triggered, providing you with information about a new attribution whenever it changes. If you want to access information about a user's current attribution whenever you need it, you can make a call to the following method of the `Adjust` instance:
-
-```cs
-AdjustAttribution attribution = Adjust.getAttribution();
-```
-
-**Note**: Information about current attribution is available after app installation has been tracked by the Adjust backend and the attribution callback has been initially triggered. From that moment on, the Adjust SDK has information about a user's attribution and you can access it with this method. So, **it is not possible** to access a user's attribution value before the SDK has been initialized and an attribution callback has been triggered.
-
-
 ### <a id="track-additional-ids"></a>Track additional device identifiers
 
 If you are distributing your Android app **outside of the Google Play Store** and would like to track additional device identifiers (IMEI and MEID), you need to explicitly instruct the Adjust SDK to do so. You can do that by calling the `setReadMobileEquipmentIdentity` method of the `AdjustConfig` instance. **The Adjust SDK does not collect these identifiers by default**.
@@ -786,6 +721,70 @@ If you want to use the Adjust SDK to recognize users that found your app pre-ins
     ```
     Default tracker: 'abc123'
     ```
+
+### <a id="background-tracking"></a>Background tracking
+
+The default behaviour of the Adjust SDK is to **pause sending HTTP requests while the app is in the background**. You can change this in your `AdjustConfig` instance:
+
+```csharp
+AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
+
+adjustConfig.setSendInBackground(true);
+
+Adjust.start(adjustConfig);
+```
+
+### <a id="event-buffering"></a>Event buffering
+
+If your app makes heavy use of event tracking, you might want to delay some HTTP requests in order to send them in one batch every minute. You can enable event buffering with your `AdjustConfig` instance:
+
+```cs
+AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
+
+adjustConfig.setEventBufferingEnabled(true);
+
+Adjust.start(adjustConfig);
+```
+
+If nothing is set, event buffering is **disabled by default**.
+
+### <a id="offline-mode"></a>Offline mode
+
+You can put the Adjust SDK in offline mode to suspend transmission to our servers, while retaining tracked data to be sent later. When in offline mode, all information is saved in a file, so be careful not to trigger too many events.
+
+You can activate offline mode by calling `setOfflineMode` with the parameter `true`.
+
+```cs
+Adjust.setOfflineMode(true);
+```
+
+### <a id="disable-tracking"></a>Disable tracking
+
+You can disable the Adjust SDK from tracking by invoking the method `setEnabled` with the enabled parameter as `false`. **This setting is remembered between sessions**, but it can only be activated after the first session.
+
+```cs
+Adjust.setEnabled(false);
+```
+
+Conversely, you can deactivate offline mode by calling `setOfflineMode` with `false`. When the Adjust SDK is put back in online mode, all saved information is send to our servers with the correct time information.
+
+Unlike disabling tracking, **this setting is not remembered** between sessions. This means that the SDK is in online mode whenever it is started, even if the app was terminated in offline mode.
+
+### <a id="sdk-signature"></a>SDK signature
+
+An account manager must activate the Adjust SDK signature. Contact Adjust support (support@adjust.com) if you are interested in using this feature.
+
+If the SDK signature has already been enabled on your account and you have access to App Secrets in your Adjust Dashboard, please use the method below to integrate the SDK signature into your app.
+
+An App Secret is set by passing all secret parameters (`secretId`, `info1`, `info2`, `info3`, `info4`) to `setAppSecret` method of `AdjustConfig` instance:
+
+```cs
+AdjustConfig adjustConfig = new AdjustConfig("{YourAppToken}", "{YourEnvironment}");
+
+adjustConfig.setAppSecret(secretId, info1, info2, info3, info4);
+
+Adjust.start(adjustConfig);
+```
 
 ### <a id="gdpr-forget-me"></a>GDPR right to be forgotten
  In accordance with article 17 of the EU's General Data Protection Regulation (GDPR), you can notify Adjust when a user has exercised their right to be forgotten. Calling the following method will instruct the Adjust SDK to communicate the user's choice to be forgotten to the Adjust backend:
